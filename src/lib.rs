@@ -8,6 +8,7 @@ extern crate rust_embed;
 extern crate termcolor;
 
 mod coz;
+mod format;
 mod gamedef;
 mod sc3;
 mod text;
@@ -84,6 +85,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             SubCommand::with_name("extract-text")
                 .about("Extracts text from one or multiple script files")
                 .display_order(1)
+                .setting(AppSettings::DisableVersion)
                 .args(&[
                     Arg::with_name("input")
                         .help("Path to the input file or a glob pattern")
@@ -99,6 +101,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             SubCommand::with_name("replace-text")
                 .about("Replaces the contents of one or multiple script files")
                 .display_order(2)
+                .setting(AppSettings::DisableVersion)
                 .args(&[
                     Arg::with_name("scripts")
                         .help("Path to the input script file or a glob pattern")
@@ -188,11 +191,11 @@ fn extract_text(
     gamedef: &GameDef,
     keep_fullwidth_chars: bool,
 ) -> Result<(), Box<dyn Error>> {
-    let script = sc3::Script::open(File::open(script_path)?)?;
+    let script = format::open(File::open(script_path)?)?;
     let txt = File::create(out)?;
     let mut writer = BufWriter::new(txt);
 
-    let table = &script.string_index;
+    let table = &script.string_index();
     for (i, handle) in table.iter().enumerate() {
         let line = script.read_string(handle)?;
         let serialized = line
@@ -220,11 +223,11 @@ fn replace_text(
         .read(true)
         .write(true)
         .open(&script_file)?;
-    let mut script = sc3::Script::open(file)?;
+    let mut script = format::open(file)?;
     let txt = BufReader::new(File::open(&text_file)?);
 
     let lines = script
-        .string_index
+        .string_index()
         .iter()
         .map(|x| script.read_string(x))
         .zip(txt.lines().map(|res| res.map(|s| CozString(s.into()))));
@@ -241,10 +244,7 @@ fn replace_text(
     for (i, (scr_line, txt_line)) in lines.enumerate() {
         let scr_line = scr_line?;
         let txt_line = txt_line?;
-        let zipper = scr_line.iter().zip_longest(txt_line.iter());
-        //changes.push((i, txt_line));
-
-        for pair in zipper {
+        for pair in scr_line.iter().zip_longest(txt_line.iter()) {
             match pair {
                 EitherOrBoth::Both(sc3, coz) => {
                     let eq = equivalent(&sc3?, &coz, &gamedef)
@@ -270,7 +270,7 @@ fn replace_text(
     }
 
     let process_change = |i, s| {
-        let index = &script.string_index;
+        let index = &script.string_index();
         let orig = script.read_string(index.get(i).unwrap())?;
         let mut fullwidth = false;
         for tk in orig.iter() {
@@ -309,7 +309,7 @@ fn replace_text(
         report_ok(&format!(
             "Successfully replaced {} out of {} lines.",
             changes.len(),
-            script.string_index.count()
+            script.string_index().count()
         ));
     } else {
         report_ok("No changes found.");

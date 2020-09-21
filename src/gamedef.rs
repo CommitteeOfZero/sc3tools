@@ -51,7 +51,7 @@ impl GameDef {
         resource_dir: &'static str,
         aliases: &'static [&'static str],
         reserved_codepoints: RangeInclusive<char>,
-        always_halfwidth: Vec<char>,
+        fullwidth_blocklist: Vec<char>,
     ) -> Self {
         fn file_path(resource_dir: &'static str, name: &'static str) -> String {
             format!("{}/{}", resource_dir, name)
@@ -77,7 +77,7 @@ impl GameDef {
             charset,
             compound_chars,
             encoding_maps,
-            fullwidth_blocklist: always_halfwidth,
+            fullwidth_blocklist,
         }
     }
 

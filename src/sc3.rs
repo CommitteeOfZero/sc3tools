@@ -1,183 +1,22 @@
-use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
-use fs::File;
-use io::{BufReader, BufWriter};
+use byteorder::{BigEndian, WriteBytesExt};
 use nom::{
     bytes::complete::{tag, take},
     combinator::{cond, map, peek, recognize, verify},
-    multi::{many0, many_till},
-    number::complete::{be_u16, be_u8, le_u32},
-    sequence::{preceded, terminated, tuple},
+    multi::many_till,
+    number::complete::{be_u16, be_u8},
+    sequence::terminated,
     IResult,
 };
-use std::{
-    borrow::Cow,
-    cell::RefCell,
-    collections::HashMap,
-    fmt, fs,
-    io::{self, prelude::*, SeekFrom},
-    ops::Range,
-};
+use std::{borrow::Cow, fmt, io};
 
 #[derive(Debug)]
 pub enum Error {
     Io(io::Error),
-    UnrecognizedFormat,
-    CorruptedFile,
     ExpectedMoreInput,
     UnrecognizedInstr(u8),
 }
 
 impl std::error::Error for Error {}
-
-pub struct Script {
-    reader: RefCell<BufReader<File>>,
-    writer: BufWriter<File>,
-    string_index_offset: usize,
-    pub string_index: StringIndex,
-}
-
-pub struct StringHandle(Range<u32>);
-
-pub struct StringIndex {
-    offsets: Vec<u32>,
-    eof: u32,
-}
-
-impl StringIndex {
-    pub fn new(offsets: Vec<u32>, eof: u32) -> Self {
-        Self { offsets, eof }
-    }
-
-    pub fn iter(&self) -> StringIndexIter {
-        StringIndexIter {
-            index: &self,
-            pos: 0,
-        }
-    }
-
-    pub fn count(&self) -> usize {
-        self.offsets.len()
-    }
-
-    pub fn get(&self, index: usize) -> Option<StringHandle> {
-        if index < self.offsets.len() {
-            let range = if index < self.offsets.len() - 1 {
-                self.offsets[index]..self.offsets[index + 1]
-            } else {
-                self.offsets[index]..self.eof
-            };
-            Some(StringHandle(range))
-        } else {
-            None
-        }
-    }
-}
-
-impl StringHandle {
-    pub fn size(&self) -> usize {
-        self.0.len()
-    }
-}
-
-impl Script {
-    pub fn open(file: File) -> Result<Self, Error> {
-        fn str_index_location(i: &[u8]) -> IResult<&[u8], Range<u32>> {
-            map(
-                preceded(tag("SC3\0"), tuple((le_u32, le_u32))),
-                |(start, end)| start..end,
-            )(i)
-        }
-
-        fn read_str_offsets(i: &[u8]) -> IResult<&[u8], Vec<u32>> {
-            many0(le_u32)(i)
-        }
-
-        let mut reader = BufReader::new(file.try_clone()?);
-        let mut header = [0; 12];
-        reader.read_exact(&mut header)?;
-        let (_, str_index_loc) =
-            str_index_location(&header).map_err(|_| Error::UnrecognizedFormat)?;
-
-        reader.seek(SeekFrom::Start(str_index_loc.start as u64))?;
-        let mut buf = vec![0u8; str_index_loc.len()];
-        reader.read_exact(&mut buf)?;
-        let (_, str_offsets) = read_str_offsets(&buf).map_err(|_| Error::CorruptedFile)?;
-
-        let eof = reader.seek(SeekFrom::End(0))?;
-
-        let writer = BufWriter::new(file.try_clone()?);
-
-        Ok(Script {
-            reader: RefCell::new(reader),
-            writer,
-            string_index_offset: str_index_loc.start as usize,
-            string_index: StringIndex::new(str_offsets, eof as u32),
-        })
-    }
-
-    pub fn read_string<'a>(&self, handle: StringHandle) -> io::Result<Sc3String<'a>> {
-        let mut reader = self.reader.borrow_mut();
-        reader.seek(SeekFrom::Start(handle.0.start.into()))?;
-        let mut buf = vec![0u8; handle.size()];
-        reader.read_exact(&mut buf)?;
-        Ok(Sc3String(buf.into()))
-    }
-
-    pub fn replace_strings<'a>(
-        &mut self,
-        changes: &HashMap<usize, Sc3String<'a>>,
-    ) -> io::Result<()> {
-        let lines = self
-            .string_index
-            .iter()
-            .enumerate()
-            .map(|(i, handle)| {
-                changes
-                    .get(&i)
-                    .map(|s| Ok(s.clone()))
-                    .unwrap_or_else(|| self.read_string(handle))
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-
-        if let Some(heap_start) = self.string_index.get(0).map(|handle| handle.0.start) {
-            let offsets = lines.iter().scan(heap_start, |acc, x| {
-                let offset = Some(*acc);
-                *acc += x.0.len() as u32;
-                offset
-            });
-
-            let writer = &mut self.writer;
-            writer.seek(SeekFrom::Start(heap_start as u64))?;
-            for s in &lines {
-                writer.write(&s.0)?;
-            }
-
-            writer.seek(SeekFrom::Start(self.string_index_offset as u64))?;
-            for offset in offsets {
-                writer.write_u32::<LittleEndian>(offset)?;
-            }
-        }
-
-        Ok(())
-    }
-}
-
-pub struct StringIndexIter<'a> {
-    index: &'a StringIndex,
-    pos: usize,
-}
-
-impl Iterator for StringIndexIter<'_> {
-    type Item = StringHandle;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let next = self.index.get(self.pos);
-        if next.is_some() {
-            self.pos += 1;
-        }
-        next
-    }
-}
 
 #[derive(Clone)]
 pub struct Sc3String<'a>(pub Cow<'a, [u8]>);
@@ -385,9 +224,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::Io(err) => fmt::Display::fmt(&err, f),
-            Error::UnrecognizedFormat => write!(f, "unrecognized format"),
-            Error::CorruptedFile => write!(f, "file appears to be corrutped"),
-            Error::UnrecognizedInstr(_op) => write!(f, "unrecognized instruction"),
+            Error::UnrecognizedInstr(op) => write!(f, "unrecognized instruction ({:#X})", op),
             Error::ExpectedMoreInput => write!(f, "expected more input"),
         }
     }
