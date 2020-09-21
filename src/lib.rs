@@ -23,7 +23,7 @@ use sc3::Sc3String;
 use std::{
     collections::HashMap,
     error,
-    fs::OpenOptions,
+    fs::{self, OpenOptions},
     io,
     io::{BufRead, BufReader, BufWriter, Write},
     path::PathBuf,
@@ -147,15 +147,29 @@ fn run_extract_text(
 ) -> Result<(), Box<dyn Error>> {
     Ok(for entry in paths {
         let path = entry?;
+        let out_dir = if let Some(script_dir) = path.parent() {
+            let out_dir = script_dir.join("txt");
+            fs::create_dir_all(&out_dir)?;
+            out_dir
+        } else {
+            continue;
+        };
+
+        let stem = if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+            stem.to_owned()
+        } else {
+            continue;
+        };
+
         println!("Processing {:?}...", path);
-        let ext = path
-            .extension()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap()
-            .to_owned()
+        let ext = ".".to_owned()
+            + &path
+                .extension()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap()
             + ".txt";
-        let output = path.with_extension(&ext);
+        let output = out_dir.join(stem + &ext);
         if let Err(err) = extract_text(&path, &output, gamedef, keep_fullwidth_chars) {
             report_err(err)
         }

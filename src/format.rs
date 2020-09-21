@@ -260,7 +260,7 @@ impl Format for Msb {
     fn str_index_location(header: &[u8]) -> IResult<&[u8], Range<u32>> {
         map(
             preceded(tag("MES\0"), tuple((le_u32, le_u32, le_u32))),
-            |(_, _, end)| 16..end
+            |(_, _, end)| 16..end,
         )(header)
     }
 
