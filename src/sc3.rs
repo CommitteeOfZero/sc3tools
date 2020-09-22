@@ -74,6 +74,7 @@ pub enum StringToken<'a> {
     #[allow(non_camel_case_types)]
     AutoForward_1A,
     RubyCenterPerChar,
+    AltLineBreak,
     Terminator,
 }
 
@@ -82,7 +83,9 @@ pub enum PresentAction {
     None,
     ResetAlignment,
     #[allow(non_camel_case_types)]
-    Unkown_0x18,
+    Unknown_0x05,
+    #[allow(non_camel_case_types)]
+    Unknown_0x18,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -144,6 +147,7 @@ impl<'a> StringToken<'_> {
             0x02 => Ok((i, StringToken::LineStart)),
             0x03 => Ok((i, StringToken::Present(PresentAction::None))),
             0x04 => parse(i, Expr::parse, StringToken::Color),
+            0x05 => Ok((i, StringToken::Present(PresentAction::Unknown_0x05))),
             0x08 => Ok((i, StringToken::Present(PresentAction::ResetAlignment))),
             0x09 => Ok((i, StringToken::RubyBaseStart)),
             0x0A => Ok((i, StringToken::RubyTextStart)),
@@ -155,10 +159,11 @@ impl<'a> StringToken<'_> {
             0x12 => parse(i, be_u16, StringToken::MarginLeft),
             0x13 => parse(i, be_u16, StringToken::HardcodedValue),
             0x15 => parse(i, Expr::parse, StringToken::Eval),
-            0x18 => Ok((i, StringToken::Present(PresentAction::Unkown_0x18))),
+            0x18 => Ok((i, StringToken::Present(PresentAction::Unknown_0x18))),
             0x19 => Ok((i, StringToken::AutoForward)),
             0x1A => Ok((i, StringToken::AutoForward_1A)),
             0x1E => Ok((i, StringToken::RubyCenterPerChar)),
+            0x1F => Ok((i, StringToken::AltLineBreak)),
             0xFF => Ok((i, StringToken::Terminator)),
             #[allow(overlapping_patterns)]
             0x00..=0x7F => Err(Error::UnrecognizedInstr(op)),
@@ -180,6 +185,7 @@ impl<'a> StringToken<'_> {
             StringToken::LineStart => 0x02,
             StringToken::Present(PresentAction::None) => 0x03,
             StringToken::Color(_) => 0x04,
+            StringToken::Present(PresentAction::Unknown_0x05) => 0x05,
             StringToken::Present(PresentAction::ResetAlignment) => 0x08,
             StringToken::RubyBaseStart => 0x09,
             StringToken::RubyTextStart => 0x0A,
@@ -191,10 +197,11 @@ impl<'a> StringToken<'_> {
             StringToken::MarginLeft(_) => 0x12,
             StringToken::HardcodedValue(_) => 0x13,
             StringToken::Eval(_) => 0x15,
-            StringToken::Present(PresentAction::Unkown_0x18) => 0x18,
+            StringToken::Present(PresentAction::Unknown_0x18) => 0x18,
             StringToken::AutoForward => 0x19,
             StringToken::AutoForward_1A => 0x1A,
             StringToken::RubyCenterPerChar => 0x1E,
+            StringToken::AltLineBreak => 0x1F,
             StringToken::Terminator => 0xFF,
             StringToken::Text(_) => unreachable!(),
         };

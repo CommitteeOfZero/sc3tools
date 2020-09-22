@@ -207,7 +207,8 @@ impl<'a> StringToken<'a> {
                 match action {
                     sc3::PresentAction::None => "%p",
                     sc3::PresentAction::ResetAlignment => "%e",
-                    sc3::PresentAction::Unkown_0x18 => "%18",
+                    sc3::PresentAction::Unknown_0x05 => "%05",
+                    sc3::PresentAction::Unknown_0x18 => "%18",
                 },
                 None,
             ),
@@ -228,7 +229,8 @@ impl<'a> StringToken<'a> {
             StringToken::Eval(expr) => ("evaluate", Some(("expr", hex::encode_upper(&expr.0)))),
             StringToken::AutoForward => ("auto-forward", None),
             StringToken::AutoForward_1A => ("auto-forward-1a", None),
-            _ => unreachable!(),
+            StringToken::AltLineBreak => ("alt-linebreak", None),
+            StringToken::Text(_) => unreachable!(),
         };
         Ok(StringSegment::Tag(Tag::new(
             name,
@@ -252,11 +254,13 @@ impl<'a> StringToken<'a> {
     pub fn from_tag<'t: 'a>(tag: &Tag<'t>) -> Result<Option<Self>, ParseError> {
         let res = match tag.name {
             "linebreak" => Ok(StringToken::LineBreak),
-            "alt-linebreak" => unreachable!(),
+            "alt-linebreak" => Ok(StringToken::AltLineBreak),
             "name" => Ok(StringToken::NameStart),
             "line" => Ok(StringToken::LineStart),
             "%p" => Ok(StringToken::Present(sc3::PresentAction::None)),
             "%e" => Ok(StringToken::Present(sc3::PresentAction::ResetAlignment)),
+            "%05" => Ok(StringToken::Present(sc3::PresentAction::Unknown_0x05)),
+            "%18" => Ok(StringToken::Present(sc3::PresentAction::Unknown_0x18)),
             "color" => Self::expr_attr(tag.attr.as_ref(), "index").map(StringToken::Color),
             "ruby-base" | "rubybase" => Ok(StringToken::RubyBaseStart),
             "ruby-text-start" | "rubytextstart" => Ok(StringToken::RubyTextStart),
@@ -277,7 +281,6 @@ impl<'a> StringToken<'a> {
             }
             "auto-forward" | "autoforward" => Ok(StringToken::AutoForward),
             "auto-forward-1a" => Ok(StringToken::AutoForward_1A),
-            "%18" => Ok(StringToken::Present(sc3::PresentAction::Unkown_0x18)),
             "evaluate" => Self::expr_attr(tag.attr.as_ref(), "expr").map(StringToken::Eval),
             _ => return Ok(None),
         };
