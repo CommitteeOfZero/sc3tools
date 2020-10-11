@@ -17,17 +17,28 @@ struct ResourceDir;
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Game {
     SteinsGate0,
+    RoboticsNotes,
 }
 
 lazy_static! {
-    pub static ref DEFS: Vec<GameDef> = vec![GameDef::new(
-        Game::SteinsGate0,
-        "Steins;Gate 0",
-        "sg0",
-        &["sg0", "steinsgate0"],
-        '\u{E12F}'..='\u{E2AF}',
-        vec!['\'']
-    )];
+    pub static ref DEFS: Vec<GameDef> = vec![
+        GameDef::new(
+            Game::SteinsGate0,
+            "Steins;Gate 0",
+            "sg0",
+            &["sg0", "steinsgate0"],
+            Some('\u{E12F}'..='\u{E2AF}'),
+            vec!['\'']
+        ),
+        GameDef::new(
+            Game::RoboticsNotes,
+            "Robotics;Notes",
+            "rn",
+            &["rn", "roboticsnotes"],
+            None,
+            vec!['\'']
+        ),
+    ];
 }
 
 pub struct GameDef {
@@ -37,7 +48,7 @@ pub struct GameDef {
     full_name: &'static str,
     pub aliases: &'static [&'static str],
     #[allow(dead_code)]
-    reserved_codepoints: RangeInclusive<char>,
+    reserved_codepoints: Option<RangeInclusive<char>>,
     charset: Vec<char>,
     pub compound_chars: HashMap<char, String>,
     pub encoding_maps: EncodingMaps,
@@ -50,7 +61,7 @@ impl GameDef {
         full_name: &'static str,
         resource_dir: &'static str,
         aliases: &'static [&'static str],
-        reserved_codepoints: RangeInclusive<char>,
+        reserved_codepoints: Option<RangeInclusive<char>>,
         fullwidth_blocklist: Vec<char>,
     ) -> Self {
         fn file_path(resource_dir: &'static str, name: &'static str) -> String {

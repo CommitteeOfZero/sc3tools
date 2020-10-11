@@ -20,6 +20,9 @@
                 }
             },
             "args": [
+                "extract-text",
+                "S:/sc3/rn/zz_00.msb",
+                "rn"
             ],
             "cwd": "${workspaceFolder}"
         },
