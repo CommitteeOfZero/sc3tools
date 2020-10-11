@@ -89,6 +89,7 @@ impl<'a> Iterator for CharIterator<'a> {
 pub enum EncodingError {
     IllegalCharCode(u16),
     CharNotInCharset(String),
+    PuaCharNotMapped(u16, char),
 }
 
 impl error::Error for EncodingError {}
@@ -188,7 +189,7 @@ pub fn decode_char<'a>(
         compound_map
             .get(&ch)
             .map(|s| Char::Compound(s))
-            .ok_or_else(|| EncodingError::IllegalCharCode(code))
+            .ok_or_else(|| EncodingError::PuaCharNotMapped(code, ch))
     } else {
         Ok(Char::Regular(ch))
     }
@@ -227,6 +228,12 @@ impl fmt::Display for EncodingError {
             EncodingError::CharNotInCharset(ch) => {
                 write!(f, "character '{}' is not present in the charset", ch)
             }
+            EncodingError::PuaCharNotMapped(code, ch) => write!(
+                f,
+                "{} corresponds to a private use area character '{}' which isn't properly mapped.",
+                code,
+                ch.escape_unicode()
+            ),
         }
     }
 }

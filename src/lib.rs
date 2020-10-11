@@ -162,13 +162,7 @@ fn run_extract_text(
         };
 
         println!("Processing {:?}...", path);
-        let ext = ".".to_owned()
-            + &path
-                .extension()
-                .unwrap_or_default()
-                .to_str()
-                .unwrap()
-            + ".txt";
+        let ext = ".".to_owned() + &path.extension().unwrap_or_default().to_str().unwrap() + ".txt";
         let output = out_dir.join(stem + &ext);
         if let Err(err) = extract_text(&path, &output, gamedef, keep_fullwidth_chars) {
             report_err(err)
