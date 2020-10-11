@@ -230,7 +230,7 @@ impl fmt::Display for EncodingError {
             }
             EncodingError::PuaCharNotMapped(code, ch) => write!(
                 f,
-                "{} corresponds to a private use area character '{}' which isn't properly mapped.",
+                "{:#X} corresponds to a private use area character '{}' which isn't properly mapped.",
                 code,
                 ch.escape_unicode()
             ),
