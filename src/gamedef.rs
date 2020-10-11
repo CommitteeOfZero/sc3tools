@@ -54,8 +54,7 @@ lazy_static! {
 pub struct GameDef {
     #[allow(dead_code)]
     game: Game,
-    #[allow(dead_code)]
-    full_name: &'static str,
+    pub full_name: &'static str,
     pub aliases: &'static [&'static str],
     #[allow(dead_code)]
     reserved_codepoints: Option<RangeInclusive<char>>,

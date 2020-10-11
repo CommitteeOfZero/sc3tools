@@ -69,7 +69,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let after_help: String = {
         let games = gamedef::DEFS
             .iter()
-            .map(|x| x.aliases.join("|"))
+            .map(|x| format!("{} ({})", x.full_name, x.aliases.join("|")))
             .collect::<Vec<_>>()
             .join("\n    ");
         "SUPPORTED GAMES:\n    ".to_owned() + &games
