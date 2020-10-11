@@ -94,13 +94,21 @@ pub enum EncodingError {
 
 impl error::Error for EncodingError {}
 
+#[derive(Debug)]
+pub struct EncodingMapConstructionError {
+    pub missing_pua_chars: Vec<char>,
+}
+
 pub struct EncodingMaps {
     main: HashMap<char, u16>,
     compound: HashMap<String, u16>,
 }
 
 impl EncodingMaps {
-    pub fn new(charset: &[char], pua_mappings: &HashMap<char, String>) -> Self {
+    pub fn new(
+        charset: &[char],
+        pua_mappings: &HashMap<char, String>,
+    ) -> Result<Self, EncodingMapConstructionError> {
         let main: HashMap<_, _> = (0..charset.len())
             .map(|i| {
                 let high_byte = 0x80u8 + (i / 256) as u8;
@@ -110,19 +118,21 @@ impl EncodingMaps {
             })
             .collect();
 
-        let lookup_compound = |ch| {
-            main.get(ch).expect(&format!(
-                "Private Use Area character '{}' not found in the charset.",
-                ch.escape_unicode()
-            ))
-        };
+        let lookup_compound = |ch| main.get(ch).ok_or_else(|| *ch);
 
-        let compound: HashMap<_, _> = pua_mappings
+        let (compound, missing): (Vec<_>, Vec<_>) = pua_mappings
             .iter()
-            .map(|(k, v)| (v.clone(), *lookup_compound(k)))
-            .collect();
+            .map(|(k, v)| lookup_compound(k).map(|code| (v.clone(), *code)))
+            .partition(Result::is_ok);
 
-        EncodingMaps { main, compound }
+        if !missing.is_empty() {
+            return Err(EncodingMapConstructionError {
+                missing_pua_chars: missing.into_iter().map(Result::unwrap_err).collect(),
+            });
+        }
+
+        let compound: HashMap<_, _> = compound.into_iter().map(Result::unwrap).collect();
+        Ok(EncodingMaps { main, compound })
     }
 }
 

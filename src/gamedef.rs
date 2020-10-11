@@ -9,6 +9,7 @@ use nom::{
 };
 use rust_embed::RustEmbed;
 use std::{borrow::Cow, collections::HashMap, ops::RangeInclusive};
+use itertools::Itertools;
 
 #[derive(RustEmbed)]
 #[folder = "resources/"]
@@ -89,6 +90,14 @@ impl GameDef {
         let compound_chars = parse_compound_ch_map(compound_chars);
         let encoding_maps = EncodingMaps::new(&charset, &compound_chars);
 
+        if let Err(err) = encoding_maps {
+            panic!(
+                "Error while constructing encoding maps for {}. The following Private Use Area characters were not found in the charset: [{}]",
+                full_name,
+                err.missing_pua_chars.into_iter().map(|ch| format!("'{}'", ch.escape_unicode())).join(", ")
+            );
+        }
+
         Self {
             game,
             full_name,
@@ -96,7 +105,7 @@ impl GameDef {
             reserved_codepoints,
             charset,
             compound_chars,
-            encoding_maps,
+            encoding_maps: encoding_maps.unwrap(),
             fullwidth_blocklist,
         }
     }
