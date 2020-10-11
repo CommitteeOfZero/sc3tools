@@ -18,6 +18,7 @@ struct ResourceDir;
 pub enum Game {
     SteinsGate0,
     RoboticsNotes,
+    RoboticsNotesDash,
 }
 
 lazy_static! {
@@ -35,6 +36,14 @@ lazy_static! {
             "Robotics;Notes",
             "rn",
             &["rn", "roboticsnotes"],
+            None,
+            vec!['\'']
+        ),
+        GameDef::new(
+            Game::RoboticsNotesDash,
+            "Robotics;Notes DaSH",
+            "rn",
+            &["rnd", "roboticsnotesdash"],
             None,
             vec!['\'']
         ),
