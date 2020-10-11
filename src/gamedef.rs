@@ -1,4 +1,5 @@
 use crate::text::EncodingMaps;
+use itertools::Itertools;
 use nom::{
     bytes::complete::is_not,
     character::complete::{char, line_ending, not_line_ending},
@@ -9,7 +10,6 @@ use nom::{
 };
 use rust_embed::RustEmbed;
 use std::{borrow::Cow, collections::HashMap, ops::RangeInclusive};
-use itertools::Itertools;
 
 #[derive(RustEmbed)]
 #[folder = "resources/"]
@@ -92,9 +92,13 @@ impl GameDef {
 
         if let Err(err) = encoding_maps {
             panic!(
-                "Error while constructing encoding maps for {}. The following Private Use Area characters were not found in the charset: [{}]",
+                "Error while constructing encoding maps for {}. \
+                The following Private Use Area characters were not found in the charset: [{}]",
                 full_name,
-                err.missing_pua_chars.into_iter().map(|ch| format!("'{}'", ch.escape_unicode())).join(", ")
+                err.missing_pua_chars
+                    .into_iter()
+                    .map(|ch| format!("'{}'", ch.escape_unicode()))
+                    .join(", ")
             );
         }
 
