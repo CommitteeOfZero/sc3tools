@@ -43,7 +43,7 @@ lazy_static! {
         GameDef::new(
             Game::RoboticsNotesDash,
             "Robotics;Notes DaSH",
-            "rn",
+            "rnd",
             &["rnd", "roboticsnotesdash"],
             None,
             vec!['\'']
