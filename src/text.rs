@@ -110,9 +110,16 @@ impl EncodingMaps {
             })
             .collect();
 
+        let lookup_compound = |ch| {
+            main.get(ch).expect(&format!(
+                "Private Use Area character '{}' not found in the charset.",
+                ch.escape_unicode()
+            ))
+        };
+
         let compound: HashMap<_, _> = pua_mappings
             .iter()
-            .map(|(k, v)| (v.clone(), main[k]))
+            .map(|(k, v)| (v.clone(), *lookup_compound(k)))
             .collect();
 
         EncodingMaps { main, compound }
