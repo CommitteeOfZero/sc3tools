@@ -38,7 +38,7 @@ lazy_static! {
             "rn",
             &["rn", "roboticsnotes"],
             None,
-            vec!['\'','-']
+            vec!['\'','-','[',']','(',')']
         ),
         GameDef::new(
             Game::RoboticsNotesDash,
