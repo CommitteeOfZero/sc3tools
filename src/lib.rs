@@ -36,6 +36,7 @@ enum ProcessingError {
     Script(PathBuf, usize, Box<dyn Error>),
     Text(PathBuf, usize, Box<dyn Error>),
     Io(io::Error),
+    LineCountMismatch,
 }
 
 impl error::Error for ProcessingError {}
@@ -238,7 +239,7 @@ fn replace_text(
         .string_index()
         .iter()
         .map(|x| script.read_string(x))
-        .zip(txt.lines().map(|res| res.map(|s| CozString(s.into()))));
+        .zip_longest(txt.lines().map(|res| res.map(|s| CozString(s.into()))));
 
     let mut changes = Vec::new();
 
@@ -249,31 +250,35 @@ fn replace_text(
     let txt_err =
         |err: Box<dyn Error>, line| ProcessingError::Text(text_file.as_ref().to_owned(), line, err);
 
-    for (i, (scr_line, txt_line)) in lines.enumerate() {
-        let scr_line = scr_line?;
-        let txt_line = txt_line?;
-        for pair in scr_line.iter().zip_longest(txt_line.iter()) {
-            match pair {
-                EitherOrBoth::Both(sc3, coz) => {
-                    let eq = equivalent(&sc3?, &coz, &gamedef)
-                        .map_err(|err| scr_err(Box::new(err), i))?;
-                    if !eq {
+    for (i, line_pair) in lines.enumerate() {
+        if let EitherOrBoth::Both(scr_line, txt_line) = line_pair {
+            let scr_line = scr_line?;
+            let txt_line = txt_line?;
+            for pair in scr_line.iter().zip_longest(txt_line.iter()) {
+                match pair {
+                    EitherOrBoth::Both(sc3, coz) => {
+                        let eq = equivalent(&sc3?, &coz, &gamedef)
+                            .map_err(|err| scr_err(Box::new(err), i))?;
+                        if !eq {
+                            changes.push((i, txt_line));
+                            break;
+                        }
+                    }
+                    EitherOrBoth::Left(sc3) => {
+                        let _ = sc3?;
                         changes.push((i, txt_line));
                         break;
                     }
-                }
-                EitherOrBoth::Left(sc3) => {
-                    let _ = sc3?;
-                    changes.push((i, txt_line));
-                    break;
-                }
-                EitherOrBoth::Right(coz) => {
-                    let _ = sc3::StringToken::deserialize(&coz, &gamedef, false)
-                        .map_err(|err| txt_err(Box::new(err), i))?;
-                    changes.push((i, txt_line));
-                    break;
-                }
-            };
+                    EitherOrBoth::Right(coz) => {
+                        let _ = sc3::StringToken::deserialize(&coz, &gamedef, false)
+                            .map_err(|err| txt_err(Box::new(err), i))?;
+                        changes.push((i, txt_line));
+                        break;
+                    }
+                };
+            }
+        } else {
+            return Err(Box::new(ProcessingError::LineCountMismatch));
         }
     }
 
@@ -388,6 +393,10 @@ impl fmt::Display for ProcessingError {
                 err
             ),
             ProcessingError::Io(err) => fmt::Display::fmt(err, f),
+            ProcessingError::LineCountMismatch => write!(
+                f,
+                "The number of lines in the text file has to match that of the script file"
+            ),
         }
     }
 }
