@@ -17,6 +17,7 @@ struct ResourceDir;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Game {
+    SteinsGateHD,
     SteinsGate0,
     RoboticsNotes,
     RoboticsNotesDash,
@@ -24,6 +25,14 @@ pub enum Game {
 
 lazy_static! {
     pub static ref DEFS: Vec<GameDef> = vec![
+        GameDef::new(
+            Game::SteinsGateHD,
+            "Steins;Gate Steam",
+            "sghd",
+            &["sghd", "steinsgatehd"],
+            None,
+            vec!['\'', '-', '[',']', '(',')']
+        ),
         GameDef::new(
             Game::SteinsGate0,
             "Steins;Gate 0",
