@@ -3,6 +3,7 @@
 A CLI tool for extracting and modifying text in .scx and .msb scripts found in visual novels based on MAGES. engine. It's meant to be a replacement for the old, overly complicated tool which had the same name and was part of the now-abandoned [SciAdv.Net project](https://github.com/CommitteeOfZero/SciAdv.Net).
 
 ## Supported games
+- Steins;Gate (Steam)
 - Steins;Gate 0
 - Robotics;Notes
 - Robotics;Notes DaSH
