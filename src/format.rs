@@ -137,6 +137,9 @@ impl<F: Format> MagesScript for Script<F> {
     }
 
     fn replace_strings<'a>(&mut self, changes: &HashMap<usize, Sc3String<'a>>) -> io::Result<()> {
+        if self.string_index.entries.is_empty() {
+            return Ok(());
+        }
         let lines = self
             .string_index
             .iter()
@@ -149,7 +152,7 @@ impl<F: Format> MagesScript for Script<F> {
             })
             .collect::<Result<Vec<_>, _>>()?;
 
-        let heap_start = self.string_index_location.end;
+        let heap_start = self.string_index.entries[0].offset;
         let base_offset = match F::str_seek_origin() {
             StrSeekOrigin::FileStart => heap_start,
             StrSeekOrigin::HeapStart => 0,
