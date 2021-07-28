@@ -277,7 +277,9 @@ impl<'a> StringToken<'a> {
                 None => Err(ParseError::MissingAttribute("left | top".to_string())),
             },
             "font" => match tag.attr.as_ref().map(|x| x.0) {
-                Some("size") => Self::u16_attr(tag.attr.as_ref(), "size").map(StringToken::FontSize),
+                Some("size") => {
+                    Self::u16_attr(tag.attr.as_ref(), "size").map(StringToken::FontSize)
+                }
                 Some(name) => Err(ParseError::UnexpectedAttribute(name.to_string())),
                 None => Err(ParseError::MissingAttribute("size".to_string())),
             },

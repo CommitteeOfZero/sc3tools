@@ -4,7 +4,7 @@ use nom::{
     bytes::complete::is_not,
     character::complete::{char, line_ending, not_line_ending},
     combinator::{map, map_opt, map_res, opt},
-    multi::separated_list,
+    multi::separated_list0,
     sequence::{delimited, pair, preceded, tuple},
     IResult,
 };
@@ -31,7 +31,7 @@ lazy_static! {
             "sghd",
             &["sghd", "steinsgatehd"],
             None,
-            vec!['\'', '-', '[',']', '(',')']
+            vec!['\'', '-', '[', ']', '(', ')']
         ),
         GameDef::new(
             Game::SteinsGate0,
@@ -47,7 +47,7 @@ lazy_static! {
             "rn",
             &["rn", "roboticsnotes"],
             None,
-            vec!['\'', '-', '[',']', '(',')']
+            vec!['\'', '-', '[', ']', '(', ')']
         ),
         GameDef::new(
             Game::RoboticsNotesDash,
@@ -179,7 +179,7 @@ impl<'a> PuaMapping<'a> {
 }
 
 fn parse_compound_ch_map(i: &str) -> HashMap<char, String> {
-    let mappings = separated_list(line_ending, PuaMapping::parse)(i).unwrap().1;
+    let mappings = separated_list0(line_ending, PuaMapping::parse)(i).unwrap().1;
     mappings
         .iter()
         .flat_map(|m| {
