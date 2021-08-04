@@ -80,7 +80,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::DisableVersion)
         .author("Committee of Zero")
-        .version("2.0")
+        .version("2.1")
         .after_help(&*after_help)
         .subcommand(
             SubCommand::with_name("extract-text")
