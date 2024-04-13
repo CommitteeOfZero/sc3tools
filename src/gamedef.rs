@@ -18,8 +18,9 @@ struct ResourceDir;
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Game {
     SteinsGateHD,
-    SteinsGate0,
     RoboticsNotes,
+    SteinsGatePhenogram,
+    SteinsGate0,
     RoboticsNotesDash,
 }
 
@@ -34,20 +35,28 @@ lazy_static! {
             vec!['\'', '-', '[', ']', '(', ')']
         ),
         GameDef::new(
-            Game::SteinsGate0,
-            "Steins;Gate 0",
-            "sg0",
-            &["sg0", "steinsgate0"],
-            Some('\u{E12F}'..='\u{E2AF}'),
-            vec!['\'']
-        ),
-        GameDef::new(
             Game::RoboticsNotes,
             "Robotics;Notes",
             "rn",
             &["rn", "roboticsnotes"],
             None,
             vec!['\'', '-', '[', ']', '(', ')']
+        ),
+        GameDef::new(
+            Game::SteinsGatePhenogram,
+            "Steins;Gate: Linear Bounded Phenogram",
+            "sglbp",
+            &["sglbp", "steinsgatelbp"],
+            None,
+            vec!['\'', '-', '[', ']', '(', ')']
+        ),
+        GameDef::new(
+            Game::SteinsGate0,
+            "Steins;Gate 0",
+            "sg0",
+            &["sg0", "steinsgate0"],
+            Some('\u{E12F}'..='\u{E2AF}'),
+            vec!['\'']
         ),
         GameDef::new(
             Game::RoboticsNotesDash,
