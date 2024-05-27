@@ -3,10 +3,11 @@
 A CLI tool for extracting and modifying text in .scx and .msb scripts found in visual novels based on MAGES. engine. It's meant to be a replacement for the old, overly complicated tool which had the same name and was part of the now-abandoned [SciAdv.Net project](https://github.com/CommitteeOfZero/SciAdv.Net).
 
 ## Supported games
-- Steins;Gate (Steam)
-- Steins;Gate 0
-- Robotics;Notes
-- Robotics;Notes DaSH
+- STEINS;GATE (Steam)
+- STEINS;GATE: Linear Bounded Phenogram (Steam)
+- ROBOTICS;NOTES ELITE
+- STEINS;GATE 0
+- ROBOTICS;NOTES DaSH
 
 ## Usage
 Run ``./sc3tools`` with no arguments to see the list of the avaliable commands, as well as the list of the supported games and their aliases (such as ``sg0`` for Steins;Gate 0).
