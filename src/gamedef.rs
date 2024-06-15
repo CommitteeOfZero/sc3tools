@@ -56,7 +56,7 @@ lazy_static! {
             "sg0",
             &["sg0", "steinsgate0"],
             Some('\u{E12F}'..='\u{E2AF}'),
-            vec!['\'']
+            vec!['\'', '-', '[', ']', '(', ')']
         ),
         GameDef::new(
             Game::RoboticsNotesDash,
