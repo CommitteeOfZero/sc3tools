@@ -152,7 +152,11 @@ impl<F: Format> MagesScript for Script<F> {
             })
             .collect::<Result<Vec<_>, _>>()?;
 
-        let heap_start = self.string_index.entries[0].offset;
+        let mut heap_start = self.string_index.entries[0].offset;
+        if F::magic() == Msb::magic() {
+            heap_start = self.string_index.seek_from;
+        }
+
         let base_offset = match F::str_seek_origin() {
             StrSeekOrigin::FileStart => heap_start,
             StrSeekOrigin::HeapStart => 0,
