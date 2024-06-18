@@ -5,10 +5,12 @@ A CLI tool for extracting and modifying text in .scx and .msb scripts found in v
 ## Supported games
 
 - STEINS;GATE (Steam)
+- CHAOS;HEAD Love Chu☆Chu!! (PS3 & Impacto)
 - ROBOTICS;NOTES ELITE
 - STEINS;GATE: Linear Bounded Phenogram (Steam)
 - CHAOS;CHILD (Steam & GOG)
 - STEINS;GATE 0 (Steam)
+- CHAOS;CHILD Love Chu☆Chu!! (PS4 & Impacto)
 - ROBOTICS;NOTES DaSH
 
 ## Usage
