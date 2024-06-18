@@ -20,6 +20,7 @@ pub enum Game {
     SteinsGateHD,
     RoboticsNotes,
     SteinsGatePhenogram,
+    ChaosChild,
     SteinsGate0,
     RoboticsNotesDash,
 }
@@ -49,6 +50,14 @@ lazy_static! {
             &["sglbp", "steinsgatelbp"],
             None,
             vec!['\'', '-', '[', ']', '(', ')']
+        ),
+        GameDef::new(
+            Game::ChaosChild,
+            "Chaos;Child",
+            "cc",
+            &["cc", "chaoschild"],
+            Some('\u{E12F}'..='\u{E2AF}'),
+            vec!['\'']
         ),
         GameDef::new(
             Game::SteinsGate0,
