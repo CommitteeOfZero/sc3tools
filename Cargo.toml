@@ -1,6 +1,6 @@
 [package]
 name = "sc3tools"
-version = "2.4.0"
+version = "2.4.1"
 authors = ["Committee of Zero"]
 edition = "2018"
 
