@@ -70,11 +70,14 @@ pub enum StringToken<'a> {
     MarginLeft(u16),
     HardcodedValue(u16),
     Eval(Expr<'a>),
+    CallFunc,
     AutoForward,
     #[allow(non_camel_case_types)]
     AutoForward_1A,
     RubyCenterPerChar,
     AltLineBreak,
+    LastName,
+    FirstName,
     Terminator,
 }
 
@@ -85,7 +88,11 @@ pub enum PresentAction {
     #[allow(non_camel_case_types)]
     Unknown_0x05,
     #[allow(non_camel_case_types)]
-    Unknown_0x18,
+    Unknown_0x22,
+    #[allow(non_camel_case_types)]
+    Unknown_0x24,
+    #[allow(non_camel_case_types)]
+    Unknown_0x30,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -159,13 +166,18 @@ impl<'a> StringToken<'_> {
             0x12 => parse(i, be_u16, StringToken::MarginLeft),
             0x13 => parse(i, be_u16, StringToken::HardcodedValue),
             0x15 => parse(i, Expr::parse, StringToken::Eval),
-            0x18 => Ok((i, StringToken::Present(PresentAction::Unknown_0x18))),
+            0x18 => Ok((i, StringToken::CallFunc)),
             0x19 => Ok((i, StringToken::AutoForward)),
             0x1A => Ok((i, StringToken::AutoForward_1A)),
             0x1E => Ok((i, StringToken::RubyCenterPerChar)),
             0x1F => Ok((i, StringToken::AltLineBreak)),
+            0x20 => Ok((i, StringToken::LastName)),
+            0x21 => Ok((i, StringToken::FirstName)),
+            0x22 => Ok((i, StringToken::Present(PresentAction::Unknown_0x22))),
+            0x24 => Ok((i, StringToken::Present(PresentAction::Unknown_0x24))),
+            0x30 => Ok((i, StringToken::Present(PresentAction::Unknown_0x30))),
             0xFF => Ok((i, StringToken::Terminator)),
-            #[allow(overlapping_patterns)]
+            #[allow(overlapping_range_endpoints)]
             0x00..=0x7F => Err(Error::UnrecognizedInstr(op)),
             _ => parse(i, text, |chars| StringToken::Text(chars.into())),
         }
@@ -197,11 +209,16 @@ impl<'a> StringToken<'_> {
             StringToken::MarginLeft(_) => 0x12,
             StringToken::HardcodedValue(_) => 0x13,
             StringToken::Eval(_) => 0x15,
-            StringToken::Present(PresentAction::Unknown_0x18) => 0x18,
+            StringToken::CallFunc => 0x18,
             StringToken::AutoForward => 0x19,
             StringToken::AutoForward_1A => 0x1A,
             StringToken::RubyCenterPerChar => 0x1E,
             StringToken::AltLineBreak => 0x1F,
+            StringToken::LastName => 0x20,
+            StringToken::FirstName => 0x21,
+            StringToken::Present(PresentAction::Unknown_0x22) => 0x22,
+            StringToken::Present(PresentAction::Unknown_0x24) => 0x24,
+            StringToken::Present(PresentAction::Unknown_0x30) => 0x30,
             StringToken::Terminator => 0xFF,
             StringToken::Text(_) => unreachable!(),
         };

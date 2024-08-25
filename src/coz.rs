@@ -208,7 +208,9 @@ impl<'a> StringToken<'a> {
                     sc3::PresentAction::None => "%p",
                     sc3::PresentAction::ResetAlignment => "%e",
                     sc3::PresentAction::Unknown_0x05 => "%05",
-                    sc3::PresentAction::Unknown_0x18 => "%18",
+                    sc3::PresentAction::Unknown_0x22 => "%22",
+                    sc3::PresentAction::Unknown_0x24 => "%24",
+                    sc3::PresentAction::Unknown_0x30 => "%30",
                 },
                 None,
             ),
@@ -227,9 +229,12 @@ impl<'a> StringToken<'a> {
                 ("hardcoded-value", Some(("index", val.to_string())))
             }
             StringToken::Eval(expr) => ("evaluate", Some(("expr", hex::encode_upper(&expr.0)))),
+            StringToken::CallFunc => ("call", None),
             StringToken::AutoForward => ("auto-forward", None),
             StringToken::AutoForward_1A => ("auto-forward-1a", None),
             StringToken::AltLineBreak => ("alt-linebreak", None),
+            StringToken::LastName => ("last-name", None),
+            StringToken::FirstName => ("first-name", None),
             StringToken::Text(_) => unreachable!(),
         };
         Ok(StringSegment::Tag(Tag::new(
@@ -257,10 +262,12 @@ impl<'a> StringToken<'a> {
             "alt-linebreak" => Ok(StringToken::AltLineBreak),
             "name" => Ok(StringToken::NameStart),
             "line" => Ok(StringToken::LineStart),
+            "call" => Ok(StringToken::CallFunc),
             "%p" => Ok(StringToken::Present(sc3::PresentAction::None)),
             "%e" => Ok(StringToken::Present(sc3::PresentAction::ResetAlignment)),
             "%05" => Ok(StringToken::Present(sc3::PresentAction::Unknown_0x05)),
-            "%18" => Ok(StringToken::Present(sc3::PresentAction::Unknown_0x18)),
+            "last-name" => Ok(StringToken::LastName),
+            "first-name" => Ok(StringToken::FirstName),
             "color" => Self::expr_attr(tag.attr.as_ref(), "index").map(StringToken::Color),
             "ruby-base" | "rubybase" => Ok(StringToken::RubyBaseStart),
             "ruby-text-start" | "rubytextstart" => Ok(StringToken::RubyTextStart),

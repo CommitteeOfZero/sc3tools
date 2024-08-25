@@ -25,6 +25,7 @@ pub enum Game {
     SteinsGate0,
     ChaosChildLoveChuChu,
     RoboticsNotesDash,
+    FamicomDetectiveClub
 }
 
 lazy_static! {
@@ -90,6 +91,14 @@ lazy_static! {
             "Robotics;Notes DaSH",
             "rnd",
             &["rnd", "roboticsnotesdash"],
+            None,
+            vec!['\'']
+        ),
+        GameDef::new(
+            Game::FamicomDetectiveClub,
+            "Famicom Detective Club 1-2",
+            "fdc",
+            &["fdc", "famicomdetectiveclub"],
             None,
             vec!['\'']
         ),
@@ -202,8 +211,8 @@ impl<'a> PuaMapping<'a> {
                     char(']'),
                 ),
                 |(a, b)| match (a, b) {
-                    (a, Some(b)) => (a..=b),
-                    _ => (a..=a),
+                    (a, Some(b)) => a..=b,
+                    _ => a..=a,
                 },
             )(i)
         }
