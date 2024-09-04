@@ -338,7 +338,7 @@ fn equivalent(
     if let coz::StringSegment::Text(txt_str) = txt_seg {
         if let sc3::StringToken::Text(scr_str) = scr_tk {
             let txt_str = text::to_halfwidth(&txt_str, &gamedef.encoding_maps);
-            let scr_str = text::decode_str(&scr_str, &gamedef, false)?;
+            let scr_str = text::decode_str(&scr_str, &gamedef, true)?;
             return Ok(txt_str == scr_str);
         }
     }
