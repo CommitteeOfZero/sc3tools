@@ -383,9 +383,25 @@ impl fmt::Display for Error {
 mod tests {
     use super::*;
 
+    static SG0_DEF_JSON: &str = r#"
+    [{
+        "name": "Steins;Gate 0",
+        "resource_dir": "sg0",
+        "aliases": ["sg0", "steinsgate0"],
+        "reserved_codepoints": {
+        "start": "\uE12F",
+        "end": "\uE2AF"
+        },
+        "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
+    }]"#;
+
+    static DEFS: std::sync::LazyLock<Vec<gamedef::GameDef>> = std::sync::LazyLock::new(|| gamedef::build_gamedefs_from_json(SG0_DEF_JSON));
+
+
     #[test]
     fn token_serialization_roundtrip() {
-        let gamedef = gamedef::get(gamedef::Game::SteinsGate0);
+
+        let gamedef: &GameDef = gamedef::get_by_alias(&DEFS, "sg0").unwrap();
         let text = StringSegment::parse("sample text").1;
         assert_eq!(
             StringToken::deserialize(&text, &gamedef, false)
@@ -405,7 +421,7 @@ mod tests {
 
     #[test]
     fn serialization_roundtrip() -> Result<(), Box<dyn error::Error>> {
-        let gamedef = gamedef::get(gamedef::Game::SteinsGate0);
+        let gamedef = gamedef::get_by_alias(&DEFS, "sg0").unwrap();
         let src = CozString(Cow::from("[name]LuLu[line]Hi I am LuLu"));
         let sc3 = Sc3String::deserialize(&src, &gamedef, false)?;
         assert_eq!(src, sc3.serialize(&gamedef, false)?);
@@ -438,7 +454,7 @@ mod tests {
     }
 
     fn test_error(text: &str, f: impl FnOnce(Result<StringToken, Error>) -> bool) {
-        let gamedef = gamedef::get(gamedef::Game::SteinsGate0);
+        let gamedef = gamedef::get_by_alias(&DEFS, "sg0").unwrap();
         let seg = StringSegment::parse(&text).1;
         let res = StringToken::deserialize(&seg, &gamedef, false);
         assert!(f(res));
