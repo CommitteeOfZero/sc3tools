@@ -260,9 +260,23 @@ mod tests {
     use super::*;
     use crate::gamedef;
 
+    static SG0_DEF_JSON: &str = r#"
+    [{
+        "name": "Steins;Gate 0",
+        "resource_dir": "sg0",
+        "aliases": ["sg0", "steinsgate0"],
+        "reserved_codepoints": {
+        "start": "\\u{E12F}",
+        "end": "\\u{E2AF}"
+        },
+        "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
+    }]"#;
+
+    static DEFS: std::sync::LazyLock<Vec<gamedef::GameDef>> = std::sync::LazyLock::new(|| gamedef::build_gamedefs_from_json(SG0_DEF_JSON));
+
     #[test]
     fn char_iter_regular() {
-        let gamedef = gamedef::get(gamedef::Game::SteinsGate0);
+        let gamedef: &GameDef = gamedef::get_by_alias(&DEFS, "sg0").unwrap();
         let text = Text(Cow::from("A"));
         let ch = text.iter(&gamedef.encoding_maps).next().unwrap();
         assert_eq!(ch, Char::Regular('A'));
@@ -270,7 +284,7 @@ mod tests {
 
     #[test]
     fn char_iter_compound() {
-        let gamedef = gamedef::get(gamedef::Game::SteinsGate0);
+        let gamedef: &GameDef = gamedef::get_by_alias(&DEFS, "sg0").unwrap();
         let text = Text(Cow::from("[ü]"));
         let ch = text.iter(&gamedef.encoding_maps).next().unwrap();
         assert_eq!(ch, Char::Compound("ü"));
@@ -278,7 +292,7 @@ mod tests {
 
     #[test]
     fn encode_roundtrip_regular() {
-        let gamedef = gamedef::get(gamedef::Game::SteinsGate0);
+        let gamedef: &GameDef = gamedef::get_by_alias(&DEFS, "sg0").unwrap();
         let ch = Char::Regular('A');
         let code = encode_char(&ch, &gamedef).unwrap();
         let decoded = decode_char(code, gamedef.charset(), &gamedef.compound_chars);
@@ -287,7 +301,7 @@ mod tests {
 
     #[test]
     fn encode_roundtrip_compound() {
-        let gamedef = gamedef::get(gamedef::Game::SteinsGate0);
+        let gamedef: &GameDef = gamedef::get_by_alias(&DEFS, "sg0").unwrap();
         let ch = Char::Compound("ü");
         let code = encode_char(&ch, &gamedef).unwrap();
         let decoded = decode_char(code, gamedef.charset(), &gamedef.compound_chars);
@@ -296,7 +310,7 @@ mod tests {
 
     #[test]
     fn decode_invalid() {
-        let gamedef = gamedef::get(gamedef::Game::SteinsGate0);
+        let gamedef: &GameDef = gamedef::get_by_alias(&DEFS, "sg0").unwrap();
         let code = 40270u16;
         assert!(decode_char(code, gamedef.charset(), &gamedef.compound_chars).is_err());
     }
