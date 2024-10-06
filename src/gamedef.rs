@@ -18,6 +18,7 @@ struct ResourceDir;
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Game {
     SteinsGateHD,
+    SteinsGateElite,
     ChaosHeadLoveChuChu,
     RoboticsNotes,
     SteinsGatePhenogram,
@@ -35,6 +36,14 @@ lazy_static! {
             "sghd",
             &["sghd", "steinsgatehd"],
             None,
+            vec!['\'', '-', '[', ']', '(', ')']
+        ),
+        GameDef::new(
+            Game::SteinsGateElite,
+            "Steins;Gate Elite",
+            "sge",
+            &["sge", "steinsgateelite"],
+            Some('\u{E12F}'..='\u{E2AF}'),
             vec!['\'', '-', '[', ']', '(', ')']
         ),
         GameDef::new(
