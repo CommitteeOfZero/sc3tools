@@ -26,6 +26,7 @@ pub enum Game {
     SteinsGate0,
     ChaosChildLoveChuChu,
     RoboticsNotesDash,
+	SinceMemories,
 }
 
 lazy_static! {
@@ -99,6 +100,14 @@ lazy_static! {
             "Robotics;Notes DaSH",
             "rnd",
             &["rnd", "roboticsnotesdash"],
+            None,
+            vec!['\'']
+        ),
+		GameDef::new(
+            Game::SinceMemories,
+            "SINce Memories",
+            "sinmemo",
+            &["sinmemo", "sincememories"],
             None,
             vec!['\'']
         ),
