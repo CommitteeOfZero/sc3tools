@@ -12,6 +12,12 @@
     "fullwidth_blocklist": ["'", "-"]
   },
   {
+    "name": "Steins;Gate: My Darling's Embrace",
+    "resource_dir": "sgmde",
+    "aliases": ["sgmde", "steinsgatemde"],
+    "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
+  },
+  {
     "name": "Robotics;Notes",
     "resource_dir": "rn",
     "aliases": ["rn", "roboticsnotes"],
