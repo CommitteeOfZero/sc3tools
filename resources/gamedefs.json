@@ -1,0 +1,68 @@
+[  
+  {
+    "name": "Steins;Gate Steam",
+    "resource_dir": "sghd",
+    "aliases": ["sghd", "steinsgatehd"],
+    "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
+  },
+  {
+    "name": "Chaos;Head LCC",
+    "resource_dir": "chlcc",
+    "aliases": ["chlcc", "chaosheadlcc"],
+    "fullwidth_blocklist": ["'", "-"]
+  },
+  {
+    "name": "Steins;Gate: My Darling's Embrace",
+    "resource_dir": "sgmde",
+    "aliases": ["sgmde", "steinsgatemde"],
+    "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
+  },
+  {
+    "name": "Robotics;Notes",
+    "resource_dir": "rn",
+    "aliases": ["rn", "roboticsnotes"],
+    "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
+  },
+  {
+    "name": "Steins;Gate: Linear Bounded Phenogram",
+    "resource_dir": "sglbp",
+    "aliases": ["sglbp", "steinsgatelbp"],
+    "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
+  },
+  {
+    "name": "Chaos;Child",
+    "resource_dir": "cc",
+    "aliases": ["cc", "chaoschild"],
+    "reserved_codepoints": {
+      "start": "\uE12F",
+      "end": "\uE2AF"
+    },
+    "fullwidth_blocklist": ["'"]
+  },
+  {
+    "name": "Steins;Gate 0",
+    "resource_dir": "sg0",
+    "aliases": ["sg0", "steinsgate0"],
+    "reserved_codepoints": {
+      "start": "\uE12F",
+      "end": "\uE2AF"
+    },
+    "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
+  },
+  {
+    "name": "Chaos;Child LCC",
+    "resource_dir": "cclcc",
+    "aliases": ["cclcc", "chaoschildlcc"],
+    "reserved_codepoints": {
+      "start": "\uE12F",
+      "end": "\uE2AF"
+    },
+    "fullwidth_blocklist": ["'"]
+  },
+  {
+    "name": "Robotics;Notes DaSH",
+    "resource_dir": "rnd",
+    "aliases": ["rnd", "roboticsnotesdash"],
+    "fullwidth_blocklist": ["'"]
+  }
+]

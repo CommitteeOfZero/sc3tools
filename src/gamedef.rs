@@ -10,106 +10,17 @@ use nom::{
 };
 use rust_embed::RustEmbed;
 use std::{borrow::Cow, collections::HashMap, ops::RangeInclusive};
+use serde::Deserialize;
+use serde_json;
 
 #[derive(RustEmbed)]
 #[folder = "resources/"]
-struct ResourceDir;
-
-#[derive(Copy, Clone, Eq, PartialEq)]
-pub enum Game {
-    SteinsGateHD,
-    ChaosHeadLoveChuChu,
-    RoboticsNotes,
-    SteinsGatePhenogram,
-    ChaosChild,
-    SteinsGate0,
-    ChaosChildLoveChuChu,
-    RoboticsNotesDash,
-    IwakuraAria
-}
-
-lazy_static! {
-    pub static ref DEFS: Vec<GameDef> = vec![
-        GameDef::new(
-            Game::SteinsGateHD,
-            "Steins;Gate Steam",
-            "sghd",
-            &["sghd", "steinsgatehd"],
-            None,
-            vec!['\'', '-', '[', ']', '(', ')']
-        ),
-        GameDef::new(
-            Game::ChaosHeadLoveChuChu,
-            "Chaos;Head LCC",
-            "chlcc",
-            &["chlcc", "chaosheadlcc"],
-            None,
-            vec!['\'','-']
-        ),
-        GameDef::new(
-            Game::RoboticsNotes,
-            "Robotics;Notes",
-            "rn",
-            &["rn", "roboticsnotes"],
-            None,
-            vec!['\'', '-', '[', ']', '(', ')']
-        ),
-        GameDef::new(
-            Game::SteinsGatePhenogram,
-            "Steins;Gate: Linear Bounded Phenogram",
-            "sglbp",
-            &["sglbp", "steinsgatelbp"],
-            None,
-            vec!['\'', '-', '[', ']', '(', ')']
-        ),
-        GameDef::new(
-            Game::ChaosChild,
-            "Chaos;Child",
-            "cc",
-            &["cc", "chaoschild"],
-            Some('\u{E12F}'..='\u{E2AF}'),
-            vec!['\'']
-        ),
-        GameDef::new(
-            Game::SteinsGate0,
-            "Steins;Gate 0",
-            "sg0",
-            &["sg0", "steinsgate0"],
-            Some('\u{E12F}'..='\u{E2AF}'),
-            vec!['\'', '-', '[', ']', '(', ')']
-        ),
-        GameDef::new(
-            Game::ChaosChildLoveChuChu,
-            "Chaos;Child LCC",
-            "cclcc",
-            &["cclcc", "chaoschildlcc"],
-            Some('\u{E12F}'..='\u{E2AF}'),
-            vec!['\'']
-        ),
-        GameDef::new(
-            Game::RoboticsNotesDash,
-            "Robotics;Notes DaSH",
-            "rnd",
-            &["rnd", "roboticsnotesdash"],
-            None,
-            vec!['\'']
-        ),
-        GameDef::new(
-            Game::IwakuraAria,
-            "Iwakura Aria",
-            "ia",
-            &["ia", "iwakuraaria"],
-            None,
-            vec!['\'']
-        )
-    ];
-}
+pub struct ResourceDir;
 
 pub struct GameDef {
     #[allow(dead_code)]
-    game: Game,
-    pub full_name: &'static str,
-    pub aliases: &'static [&'static str],
+    pub full_name: String,
+    pub aliases: Vec<String>,
     #[allow(dead_code)]
     reserved_codepoints: Option<RangeInclusive<char>>,
     charset: Vec<char>,
@@ -118,16 +29,37 @@ pub struct GameDef {
     pub fullwidth_blocklist: Vec<char>,
 }
 
+#[derive(Deserialize)]
+pub struct GameDefJson<'a> {
+    pub name: String,
+    pub resource_dir: &'a str,
+    pub aliases: Vec<String>,
+    #[allow(dead_code)]
+    pub reserved_codepoints: Option<RangeInclusive<char>>,
+    pub fullwidth_blocklist: Vec<char>,
+}
+
+impl<'a> From<GameDefJson<'a>> for GameDef {
+    fn from(json: GameDefJson<'a>) -> Self {
+        Self::new(
+            json.name,
+            json.resource_dir,
+            json.aliases,
+            json.reserved_codepoints,
+            json.fullwidth_blocklist,
+        )
+    }
+}
+
 impl GameDef {
     pub fn new(
-        game: Game,
-        full_name: &'static str,
-        resource_dir: &'static str,
-        aliases: &'static [&'static str],
+        full_name: String,
+        resource_dir: &str,
+        aliases: Vec<String>,
         reserved_codepoints: Option<RangeInclusive<char>>,
         fullwidth_blocklist: Vec<char>,
     ) -> Self {
-        fn file_path(resource_dir: &'static str, name: &'static str) -> String {
+        fn file_path(resource_dir: &str, name: &'static str) -> String {
             format!("{}/{}", resource_dir, name)
         }
 
@@ -156,7 +88,6 @@ impl GameDef {
         }
 
         Self {
-            game,
             full_name,
             aliases,
             reserved_codepoints,
@@ -170,15 +101,16 @@ impl GameDef {
     pub fn charset(&self) -> &[char] {
         &self.charset
     }
+
 }
 
-#[allow(dead_code)]
-pub fn get(game: Game) -> &'static GameDef {
-    DEFS.iter().find(|x| x.game == game).unwrap()
+pub fn get_by_alias<'a>(defs: &'a [GameDef], alias: &str) -> Option<&'a GameDef> {
+    defs.iter().find(|x| x.aliases.iter().any(|a| a == alias))
 }
 
-pub fn get_by_alias(alias: &str) -> Option<&'static GameDef> {
-    DEFS.iter().find(|x| x.aliases.contains(&alias))
+pub fn build_gamedefs_from_json(json: &str) -> Vec<GameDef> {
+    let defs: Vec<GameDefJson> = serde_json::from_str(json).unwrap();
+    defs.into_iter().map(GameDef::from).collect()
 }
 
 #[derive(Eq, PartialEq, Debug)]

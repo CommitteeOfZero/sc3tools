@@ -13,7 +13,7 @@ mod gamedef;
 mod sc3;
 mod text;
 
-use clap::{App, AppSettings, Arg, SubCommand};
+use clap::{Arg, ArgAction, Command, Subcommand};
 use core::fmt;
 use coz::CozString;
 use gamedef::GameDef;
@@ -31,6 +31,7 @@ use std::{
 use std::{error::Error, fs::File, path::Path};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
+
 #[derive(Debug)]
 enum ProcessingError {
     Script(PathBuf, usize, Box<dyn Error>),
@@ -41,34 +42,28 @@ enum ProcessingError {
 
 impl error::Error for ProcessingError {}
 
-lazy_static! {
-    static ref SUPPORTED_GAMES: String = {
-        let aliases: Vec<_> = gamedef::DEFS.iter().map(|x| x.aliases.join("|")).collect();
-        aliases.join(",")
-    };
-}
-
 pub fn run() -> Result<(), Box<dyn Error>> {
-    fn validate_game(alias: String) -> Result<(), String> {
-        gamedef::get_by_alias(&alias)
-            .map(|_| ())
-            .ok_or_else(|| format!("try one of the following - {}", *SUPPORTED_GAMES))
-    }
+    
+    let game_defs_file = gamedef::ResourceDir::get("gamedefs.json").unwrap();
+    let game_defs_json = std::str::from_utf8(game_defs_file.as_ref()).unwrap();
+    let defs = gamedef::build_gamedefs_from_json(game_defs_json);
+    let supported_games: Vec<String> = defs.iter()
+        .flat_map(|v| v.aliases.iter().cloned()) // Clone the strings to own them
+        .collect();
 
     fn parse_glob(arg: &str, pattern: &str) -> Result<Paths, String> {
         glob::glob(pattern).map_err(|err| format!("Invalid value for '<{}>'\n{}", arg, err))
     }
 
-    fn game_arg(idx: u64) -> Arg<'static, 'static> {
-        Arg::with_name("game")
-            .help(&SUPPORTED_GAMES)
+    fn game_arg(idx: usize, supported_games: &Vec<String>) -> Arg {   
+        Arg::new("game")
             .index(idx)
             .required(true)
-            .validator(validate_game)
+            .value_parser(clap::builder::PossibleValuesParser::new(supported_games))
     }
 
     let after_help: String = {
-        let games = gamedef::DEFS
+        let games = defs
             .iter()
             .map(|x| format!("{} ({})", x.full_name, x.aliases.join("|")))
             .collect::<Vec<_>>()
@@ -76,65 +71,73 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         "SUPPORTED GAMES:\n    ".to_owned() + &games
     };
 
-    let matches = App::new("sc3tools")
-        .setting(AppSettings::SubcommandRequiredElseHelp)
-        .setting(AppSettings::DisableVersion)
+    let matches = Command::new("sc3tools")
+        .subcommand_required(true)
+        .disable_version_flag(true)
         .author("Committee of Zero")
         .version("2.1")
-        .after_help(&*after_help)
+        .after_help(&after_help)
         .subcommand(
-            SubCommand::with_name("extract-text")
+            Command::new("extract-text")
                 .about("Extracts text from one or multiple script files")
                 .display_order(1)
-                .setting(AppSettings::DisableVersion)
+                .disable_version_flag(true)
                 .args(&[
-                    Arg::with_name("input")
+                    Arg::new("input")
                         .help("Path to the input file or a glob pattern")
                         .index(1)
                         .required(true),
-                    game_arg(2),
-                    Arg::with_name("preserve-fullwidth")
+                    game_arg(2, &supported_games),
+                    Arg::new("preserve-fullwidth")
                         .long("preserve-fullwidth")
-                        .help("Preserve fullwidth characters"),
+                        .action(ArgAction::SetTrue)
+                        .help("Preserve fullwidth characters")
+                        .required(false)
                 ]),
         )
         .subcommand(
-            SubCommand::with_name("replace-text")
+            Command::new("replace-text")
                 .about("Replaces the contents of one or multiple script files")
                 .display_order(2)
-                .setting(AppSettings::DisableVersion)
+                .disable_version_flag(true)
                 .args(&[
-                    Arg::with_name("scripts")
+                    Arg::new("scripts")
                         .help("Path to the input script file or a glob pattern")
                         .index(1)
                         .required(true),
-                    Arg::with_name("text-files")
+                    Arg::new("text-files")
                         .help("Path to the input text file or a glob pattern")
                         .index(2)
                         .required(true),
-                    game_arg(3),
+                        game_arg(3, &supported_games),
+                    Arg::new("preserve-fullwidth")
+                            .long("preserve-fullwidth")
+                            .action(ArgAction::SetTrue)
+                            .help("Preserve fullwidth characters")
+                            .required(false),
                 ]),
         )
         .get_matches();
-
+    
     match matches.subcommand() {
-        ("extract-text", Some(matches)) => {
-            let input = matches.value_of("input").unwrap();
-            let game = matches.value_of("game").unwrap();
-            let gamedef = gamedef::get_by_alias(game).unwrap();
-            let keep_fullwidth_chars = matches.is_present("preserve-fullwidth");
+        Some(("extract-text", sub_m)) => {
+            let input = sub_m.get_one::<String>("input").unwrap();
+            let game = sub_m.get_one::<String>("game").unwrap();
+            let gamedef = gamedef::get_by_alias(&defs, game).unwrap();
+            let keep_fullwidth_chars = sub_m.get_flag("preserve-fullwidth");
             run_extract_text(parse_glob("input", input)?, gamedef, keep_fullwidth_chars)
         }
-        ("replace-text", Some(matches)) => {
-            let scripts = matches.value_of("scripts").unwrap();
-            let txts = matches.value_of("text-files").unwrap();
-            let game = matches.value_of("game").unwrap();
-            let gamedef = gamedef::get_by_alias(game).unwrap();
+        Some(("replace-text", sub_m)) => {
+            let scripts = sub_m.get_one::<String>("scripts").unwrap();
+            let txts = sub_m.get_one::<String>("text-files").unwrap();
+            let game = sub_m.get_one::<String>("game").unwrap();
+            let gamedef = gamedef::get_by_alias(&defs, game).unwrap();
+            let keep_fullwidth_chars = sub_m.get_flag("preserve-fullwidth");
 
             run_replace_text(
                 parse_glob("scripts", scripts)?,
                 parse_glob("text-files", txts)?,
-                &gamedef,
+                &gamedef, keep_fullwidth_chars
             )
         }
         _ => Ok(()),
@@ -175,6 +178,7 @@ fn run_replace_text(
     scripts: Paths,
     text_files: Paths,
     game: &GameDef,
+    keep_fullwidth_chars: bool,
 ) -> Result<(), Box<dyn Error>> {
     let text_files: Vec<_> = text_files.map(|x| x.unwrap()).collect();
     Ok(for res in scripts {
@@ -187,7 +191,7 @@ fn run_replace_text(
             stem == script_stem || stem == script_fname
         });
         if let Some(txt_path) = txt_path {
-            if let Err(err) = replace_text(script_path, txt_path, &game) {
+            if let Err(err) = replace_text(script_path, txt_path, &game, keep_fullwidth_chars) {
                 report_err(err)
             }
         }
@@ -227,6 +231,7 @@ fn replace_text(
     script_file: impl AsRef<Path>,
     text_file: impl AsRef<Path>,
     gamedef: &GameDef,
+    keep_fullwidth_chars: bool
 ) -> Result<(), Box<dyn Error>> {
     let file = OpenOptions::new()
         .read(true)
@@ -257,7 +262,7 @@ fn replace_text(
             for pair in scr_line.iter().zip_longest(txt_line.iter()) {
                 match pair {
                     EitherOrBoth::Both(sc3, coz) => {
-                        let eq = equivalent(&sc3?, &coz, &gamedef)
+                        let eq = equivalent(&sc3?, &coz, &gamedef, keep_fullwidth_chars)
                             .map_err(|err| scr_err(Box::new(err), i))?;
                         if !eq {
                             changes.push((i, txt_line));
@@ -334,12 +339,18 @@ fn equivalent(
     scr_tk: &sc3::StringToken,
     txt_seg: &coz::StringSegment,
     gamedef: &GameDef,
+    width_insensitive: bool,
 ) -> Result<bool, text::EncodingError> {
     if let coz::StringSegment::Text(txt_str) = txt_seg {
         if let sc3::StringToken::Text(scr_str) = scr_tk {
-            let txt_str = text::to_halfwidth(&txt_str, &gamedef.encoding_maps);
-            let scr_str = text::decode_str(&scr_str, &gamedef, false)?;
-            return Ok(txt_str == scr_str);
+            if width_insensitive {
+                let scr_str = text::decode_str(&scr_str, &gamedef, false)?;
+                let txt_str = text::to_halfwidth(&txt_str, &gamedef.encoding_maps);
+                return Ok(txt_str == scr_str);
+            } else {
+                let scr_str = text::decode_str(&scr_str, &gamedef, true)?;
+                return Ok(*txt_str == scr_str);
+            }
         }
     }
 
