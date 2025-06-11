@@ -64,5 +64,11 @@
     "resource_dir": "rnd",
     "aliases": ["rnd", "roboticsnotesdash"],
     "fullwidth_blocklist": ["'"]
+  },
+  {
+    "name": "Iwakura Aria",
+    "resource_dir": "ia",
+    "aliases": ["ia", "iwakuraaria"],
+    "fullwidth_blocklist": ["'"]
   }
 ]
