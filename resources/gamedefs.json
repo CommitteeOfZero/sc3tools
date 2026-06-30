@@ -70,5 +70,11 @@
     "resource_dir": "ia",
     "aliases": ["ia", "iwakuraaria"],
     "fullwidth_blocklist": ["'"]
+  },
+   {
+    "name": "11eyes CrossOver Xbox 360",
+    "resource_dir": "eeco",
+    "aliases": ["11eyes", "eleveneyes"],
+    "fullwidth_blocklist": ["'"]
   }
 ]
