@@ -6,6 +6,12 @@
     "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
   },
   {
+    "name": "Steins;Gate Elite",
+    "resource_dir": "sge",
+    "aliases": ["sge", "steinsgateelite"],
+    "fullwidth_blocklist": ["'", "-", "[", "]", "(", ")"]
+  },
+  {
     "name": "Chaos;Head LCC",
     "resource_dir": "chlcc",
     "aliases": ["chlcc", "chaosheadlcc"],
