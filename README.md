@@ -13,6 +13,7 @@ A CLI tool for extracting and modifying text in .scx and .msb scripts found in v
 - STEINS;GATE 0 (Steam)
 - CHAOS;CHILD Love Chu☆Chu!! (PS4 & Impacto)
 - ROBOTICS;NOTES DaSH
+- Iwakura Aria
 
 ## Usage
 
